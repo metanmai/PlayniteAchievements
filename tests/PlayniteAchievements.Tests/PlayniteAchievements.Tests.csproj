@@ -109,6 +109,8 @@
     <Compile Include="..\..\source\Providers\Steam\SteamFriendListItem.cs" Link="Source\Providers\Steam\SteamFriendListItem.cs" />
     <Compile Include="..\..\source\Providers\Steam\SteamFriendListBuilder.cs" Link="Source\Providers\Steam\SteamFriendListBuilder.cs" />
     <Compile Include="..\..\source\Providers\IInGameProgressSource.cs" Link="Source\Providers\IInGameProgressSource.cs" />
+    <Compile Include="..\..\source\Providers\LocalTracking\LocalAchievementProfile.cs" Link="Source\Providers\LocalTracking\LocalAchievementProfile.cs" />
+    <Compile Include="..\..\source\Providers\LocalTracking\LocalTrackingProvider.cs" Link="Source\Providers\LocalTracking\LocalTrackingProvider.cs" />
     <Compile Include="..\..\source\Models\RefreshMode.cs" Link="Source\Models\RefreshMode.cs" />
     <Compile Include="..\..\source\Models\CustomRefreshOptions.cs" Link="Source\Models\CustomRefreshOptions.cs" />
     <Compile Include="..\..\source\Models\RefreshRequest.cs" Link="Source\Models\RefreshRequest.cs" />

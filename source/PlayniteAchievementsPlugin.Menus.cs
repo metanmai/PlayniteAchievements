@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using PlayniteAchievements.Models;
 using PlayniteAchievements.Models.Achievements;
+using PlayniteAchievements.Models.Settings;
+using PlayniteAchievements.Providers.LocalTracking;
 using PlayniteAchievements.Services;
 using PlayniteAchievements.Services.GameCustomData;
 using PlayniteAchievements.Services.Refresh;
@@ -345,6 +347,16 @@ namespace PlayniteAchievements
 
             if (!refreshInProgress)
             {
+                if (!game.IsRunning)
+                {
+                    yield return new GameMenuItem
+                    {
+                        Description = ResourceProvider.GetString("LOCPlayAch_LocalTracking_LinkProfile"),
+                        MenuSection = PluginGameMenuSection,
+                        Action = _ => LinkLocalAchievementProfile(game)
+                    };
+                }
+
                 yield return new GameMenuItem
                 {
                     Description = ResourceProvider.GetString("LOCPlayAch_Button_Refresh"),
@@ -579,6 +591,66 @@ namespace PlayniteAchievements
             {
                 _ = StartMenuRefreshAsync(new RefreshRequest { GameIds = gameIdsToRefresh });
             }
+        }
+
+        private void LinkLocalAchievementProfile(Game game)
+        {
+            var title = ResourceProvider.GetString("LOCPlayAch_Title_PluginName");
+            if (_providerRegistry?.TryGetProvider(LocalAchievementProfile.ProviderKey, out var provider) != true ||
+                !(provider is LocalTrackingProvider localProvider) || _achievementOverridesService == null)
+            {
+                return;
+            }
+
+            if (!_providerRegistry.IsProviderEnabled(LocalAchievementProfile.ProviderKey))
+            {
+                PlayniteApi.Dialogs.ShowMessage(
+                    ResourceProvider.GetString("LOCPlayAch_LocalTracking_EnableProvider"),
+                    title, MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var path = PlayniteApi.Dialogs.SelectFile(ResourceProvider.GetString("LOCPlayAch_LocalTracking_FileFilter"));
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return;
+            }
+
+            try
+            {
+                var profile = localProvider.ReadProfile(game, path);
+                profile.ReadUnlocks(CancellationToken.None);
+                _achievementOverridesService.SetProviderOverride(game.Id, new ProviderOverrideData
+                {
+                    ProviderKey = LocalAchievementProfile.ProviderKey,
+                    Value = path
+                });
+                PersistSettingsForUi();
+            }
+            catch (Exception ex)
+            {
+                _logger?.Warn(ex, $"Failed to link a local achievement profile for '{game.Name}'.");
+                PlayniteApi.Dialogs.ShowMessage(
+                    string.Format(ResourceProvider.GetString("LOCPlayAch_LocalTracking_LinkError"), ex.Message),
+                    title, MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            _ = StartMenuRefreshAsync(
+                new RefreshRequest
+                {
+                    Mode = RefreshModeType.Single,
+                    SingleGameId = game.Id,
+                    SurfaceUserNotices = true,
+                    Options = new RefreshOptions
+                    {
+                        Scope = RefreshGameScope.SelectedGame,
+                        PlayniteGameIds = new[] { game.Id },
+                        RespectUserExclusions = false,
+                        ForceIconRefresh = true
+                    }
+                },
+                game.Id);
         }
 
         private void ClearSingleGameData(Game game)

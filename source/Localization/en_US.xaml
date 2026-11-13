@@ -260,6 +260,13 @@
     <sys:String x:Key="LOCPlayAch_Provider_Manual">Manual</sys:String>
     <sys:String x:Key="LOCPlayAch_Provider_Meta">Meta Quest</sys:String>
     <sys:String x:Key="LOCPlayAch_Provider_Minecraft">Minecraft</sys:String>
+    <sys:String x:Key="LOCPlayAch_Provider_LocalTracking">Local Tracking</sys:String>
+    <sys:String x:Key="LOCPlayAch_LocalTracking_ProfilePath">Local Achievement Profile Path</sys:String>
+    <sys:String x:Key="LOCPlayAch_LocalTracking_LinkProfile">Link Local Achievement Profile…</sys:String>
+    <sys:String x:Key="LOCPlayAch_LocalTracking_FileFilter">Local achievement profiles (*.json)|*.json</sys:String>
+    <sys:String x:Key="LOCPlayAch_LocalTracking_SettingsHint">Right-click a game and choose Playnite Achievements → Link Local Achievement Profile. The profile defines the achievements and maps them to a local JSON file written by the game or a mod.</sys:String>
+    <sys:String x:Key="LOCPlayAch_LocalTracking_EnableProvider">Enable Local Tracking in the Playnite Achievements platform settings first.</sys:String>
+    <sys:String x:Key="LOCPlayAch_LocalTracking_LinkError">Could not link the local achievement profile. {0}</sys:String>
     <sys:String x:Key="LOCPlayAch_Provider_PSN">PlayStation</sys:String>
     <sys:String x:Key="LOCPlayAch_Provider_RetroAchievements">RetroAchievements</sys:String>
     <sys:String x:Key="LOCPlayAch_Provider_Riot">Riot Games</sys:String>

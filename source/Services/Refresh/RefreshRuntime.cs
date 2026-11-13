@@ -1,5 +1,6 @@
 using PlayniteAchievements.Models;
 using PlayniteAchievements.Providers;
+using PlayniteAchievements.Providers.LocalTracking;
 using Playnite.SDK;
 using System;
 using System.Collections.Generic;
@@ -1655,7 +1656,19 @@ namespace PlayniteAchievements.Services.Refresh
             // achievement overwrites an unlocked one. A payload that is empty or reports no unlocks
             // for a game that already has some would erase them, so keep the cached data and let a
             // later refresh supply a complete result.
-            if (AchievementWriteGuard.ShouldRejectWrite(previous, data, out var rejectionReason))
+            // Local profiles define their own IDs. Progress only carries across refreshes of
+            // the same provider when either side of a provider switch is Local Tracking.
+            var incomingIsLocal = string.Equals(data.ProviderKey, LocalAchievementProfile.ProviderKey, StringComparison.OrdinalIgnoreCase);
+            var switchesLocalProvider = previous != null &&
+                !string.Equals(previous.ProviderKey, data.ProviderKey, StringComparison.OrdinalIgnoreCase) &&
+                (string.Equals(previous.ProviderKey, LocalAchievementProfile.ProviderKey, StringComparison.OrdinalIgnoreCase) ||
+                 incomingIsLocal);
+            var previousProgress = switchesLocalProvider ? null : previous;
+            // A valid local profile is authoritative for definitions, even if all its new
+            // rules are locked. The write guard still protects against empty payloads.
+            var hasLocalDefinitions = incomingIsLocal && data.Achievements?.Count > 0;
+            if (!hasLocalDefinitions &&
+                AchievementWriteGuard.ShouldRejectWrite(previousProgress, data, out var rejectionReason))
             {
                 var incomingTotal = data.Achievements?.Count ?? 0;
                 var incomingUnlockedCount = data.Achievements?.Count(a => a != null && a.Unlocked) ?? 0;
@@ -1666,7 +1679,7 @@ namespace PlayniteAchievements.Services.Refresh
                 return;
             }
 
-            if (AchievementWriteGuard.IsPartialUnlockRegression(previous, data, out var previousUnlocked, out var incomingUnlocked))
+            if (AchievementWriteGuard.IsPartialUnlockRegression(previousProgress, data, out var previousUnlocked, out var incomingUnlocked))
             {
                 _logger?.Debug(
                     $"Refreshed achievement data for '{game?.Name}' reports fewer unlocks than the cache " +
@@ -1676,7 +1689,7 @@ namespace PlayniteAchievements.Services.Refresh
             // Restore unlocks the payload reports as locked before anything downstream reads it: the
             // payload is what lands in the memory cache and what the unlocked aggregate is counted
             // from, so correcting it here keeps the memory cache, the rows, and the count in step.
-            var preservedUnlocks = AchievementWriteGuard.PreserveCachedUnlocks(previous, data);
+            var preservedUnlocks = AchievementWriteGuard.PreserveCachedUnlocks(previousProgress, data);
             if (preservedUnlocks > 0)
             {
                 _logger?.Debug(

@@ -43,6 +43,7 @@ Playnite Achievements features include:
   * [HoYoverse](https://github.com/justin-delano/PlayniteAchievements/wiki/Hoyoverse)
   * [Exophase](https://github.com/justin-delano/PlayniteAchievements/wiki/Exophase)
 * [Manual achievement support](https://github.com/justin-delano/PlayniteAchievements/wiki/Manual-Tracking)
+* [Live local achievement tracking](#local-achievement-tracking) for games that write progress to a local file
 * [Friends achievement data](https://github.com/justin-delano/PlayniteAchievements/wiki/Friends)
 * [Automatic syncing](https://github.com/justin-delano/PlayniteAchievements/wiki/Custom-Refresh)
 * [Achievement unlock notifications](https://github.com/justin-delano/PlayniteAchievements/wiki/General) (with screenshots/recordings)
@@ -86,6 +87,46 @@ At the top right corner of the overview are your Score Cards. Your Collection Sc
 Congratulations! PlayniteAchievements is now fully functional. This concludes the first time setup guide, please see the other sections for a more detailed showcase of more advanced and enthusiast features.
 
 See the [First Setup](https://github.com/justin-delano/PlayniteAchievements/wiki/First-Setup) guide and the [Settings](https://github.com/justin-delano/PlayniteAchievements/wiki/Settings) pages on the wiki for more detail.
+
+# Local Achievement Tracking
+
+Local Tracking brings achievements and animated unlock notifications to games you add to Playnite yourself. Each game needs a JSON profile that describes its achievements and a local JSON file that the game or a mod updates. No launcher account is required. The notification appears when the game writes the change, so games that write progress only on save will notify on save. Games without readable progress need a game-specific integration.
+
+1. Add the game to Playnite. In Desktop mode, right-click it and choose **Playnite Achievements → Link Local Achievement Profile…**, then select its profile.
+2. In the extension's notification settings, enable **Monitor Achievements While a Game Is Running**, **Enable Notifications**, and **Show my unlock notifications**.
+3. Launch the game through Playnite. Use windowed or borderless mode for the on-screen notification. Exclusive fullscreen can hide the desktop overlay.
+
+To edit a profile, keep its achievement IDs stable and link the updated file again while the game is stopped. To unlink it, open **Playnite Achievements → Manage → Overrides** and clear the **Platform Override**.
+
+## Example profile
+
+Save this as `profile.json`. The progress file can be relative to the profile, a full local path, or use Playnite variables such as `{InstallDir}` and Windows environment variables such as `%LOCALAPPDATA%`.
+
+```json
+{
+  "version": 1,
+  "progressFile": "progress.json",
+  "achievements": [
+    {
+      "id": "first-victory",
+      "name": "First Victory",
+      "description": "Win your first match.",
+      "pointer": "/achievements/firstVictory",
+      "unlockTimePointer": "/unlockTimes/firstVictory"
+    },
+    {
+      "id": "campaign-complete",
+      "name": "Campaign Complete",
+      "pointer": "/campaign/status",
+      "equals": "complete"
+    }
+  ]
+}
+```
+
+`pointer` uses JSON Pointer syntax. For example, `/players/0/wins` selects the first player's win count. A rule unlocks when the selected value equals `equals`, which defaults to `true`. Use JSON booleans, numbers or strings with the same type as the saved value. Optional fields include `description`, `hidden`, a local `icon` path, and `unlockTimePointer` for an ISO 8601 timestamp. The extension retains earned achievements when a save is reset or a different save slot is loaded.
+
+To try the notification with this example, create `progress.json` next to the profile with `{"achievements":{"firstVictory":false}}`. Link the profile and launch the Playnite entry. After the game starts, change `false` to `true` and save the file. **First Victory** should appear over the game and stay unlocked in Playnite.
 
 # Friends
 
